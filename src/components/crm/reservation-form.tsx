@@ -41,6 +41,9 @@ export function ReservationForm({
   const [time, setTime] = useState("");
   const [suggestedSlots, setSuggestedSlots] = useState<AvailableSlot[]>([]);
   const [isLoadingSlots, startLoadingSlots] = useTransition();
+  const [contact, setContact] = useState("");
+  const [newContactName, setNewContactName] = useState("");
+  const isNewContact = contact === "__new__";
 
   // Sugerencias basadas en las ventanas configuradas (para Manychat) — son
   // solo un atajo. Desde el CRM se puede agendar cualquier horario, no
@@ -79,8 +82,16 @@ export function ReservationForm({
       </Field>
 
       <Field label="Prospecto o cliente" htmlFor="contact">
-        <select id="contact" name="contact" required className="input">
+        <select
+          id="contact"
+          name="contact"
+          required
+          value={contact}
+          onChange={(e) => setContact(e.target.value)}
+          className="input"
+        >
           <option value="">Elegí un contacto</option>
+          <option value="__new__">+ Escribir un nombre nuevo</option>
           {leads.length > 0 && (
             <optgroup label="Prospectos">
               {leads.map((lead) => (
@@ -100,6 +111,18 @@ export function ReservationForm({
             </optgroup>
           )}
         </select>
+        {isNewContact && (
+          <input
+            type="text"
+            name="new_contact_name"
+            required
+            autoFocus
+            placeholder="Nombre del contacto"
+            value={newContactName}
+            onChange={(e) => setNewContactName(e.target.value)}
+            className="input mt-2"
+          />
+        )}
       </Field>
 
       <div className="grid grid-cols-2 gap-4">
@@ -171,7 +194,12 @@ export function ReservationForm({
       <div className="flex gap-3">
         <button
           type="submit"
-          disabled={pending || !startsAtValue}
+          disabled={
+            pending ||
+            !startsAtValue ||
+            !contact ||
+            (isNewContact && !newContactName.trim())
+          }
           className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
         >
           {pending ? "Reservando..." : "Pre-reservar"}

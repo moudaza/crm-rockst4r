@@ -29,18 +29,37 @@ export async function createReservation(
 ): Promise<ReservationFormState> {
   const serviceId = String(formData.get("service_id") ?? "");
   const contact = String(formData.get("contact") ?? "");
+  const newContactName = String(formData.get("new_contact_name") ?? "").trim();
   const startsAtValue = String(formData.get("starts_at") ?? "");
   const notes = String(formData.get("notes") ?? "").trim() || null;
 
   if (!serviceId) return { error: "Elegí un servicio." };
-  const { lead_id, client_id } = parseContact(contact);
-  if (!lead_id && !client_id) return { error: "Elegí un prospecto o cliente." };
   if (!startsAtValue) return { error: "Elegí un horario disponible." };
 
   const startsAt = new Date(startsAtValue);
   if (Number.isNaN(startsAt.getTime())) return { error: "Horario inválido." };
 
   const supabase = await createClient();
+
+  let lead_id: string | null = null;
+  let client_id: string | null = null;
+
+  if (contact === "__new__") {
+    if (!newContactName) return { error: "Escribí el nombre del contacto." };
+    const { data: newLead, error: newLeadError } = await supabase
+      .from("leads")
+      .insert({ name: newContactName, source: "Reserva directa (CRM)" })
+      .select("id")
+      .single();
+    if (newLeadError) return { error: newLeadError.message };
+    lead_id = newLead.id;
+  } else {
+    const parsed = parseContact(contact);
+    lead_id = parsed.lead_id;
+    client_id = parsed.client_id;
+    if (!lead_id && !client_id) return { error: "Elegí un prospecto o cliente." };
+  }
+
   const { error } = await supabase.rpc("create_pre_reservation", {
     p_service_id: serviceId,
     p_starts_at: startsAt.toISOString(),
