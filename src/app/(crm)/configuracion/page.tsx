@@ -17,6 +17,7 @@ const DATETIME_FORMAT = new Intl.DateTimeFormat("es-CO", {
   month: "short",
   hour: "2-digit",
   minute: "2-digit",
+  timeZone: "America/Bogota",
 });
 
 export default async function ConfiguracionPage({

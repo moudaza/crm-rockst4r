@@ -1,3 +1,5 @@
+import { bogotaDateTime, todayInBogota } from "@/lib/timezone";
+
 export const MONTHLY_MIN_GOAL = 2_500_000;
 export const MONTHLY_RECOMMENDED_GOAL = 5_000_000;
 
@@ -10,8 +12,16 @@ export type SalesSummary = {
   currentMonthTotal: number;
 };
 
-const DAY_LABEL = new Intl.DateTimeFormat("es-CO", { day: "2-digit", month: "short" });
-const MONTH_LABEL = new Intl.DateTimeFormat("es-CO", { month: "short", year: "2-digit" });
+const DAY_LABEL = new Intl.DateTimeFormat("es-CO", {
+  day: "2-digit",
+  month: "short",
+  timeZone: "America/Bogota",
+});
+const MONTH_LABEL = new Intl.DateTimeFormat("es-CO", {
+  month: "short",
+  year: "2-digit",
+  timeZone: "America/Bogota",
+});
 
 // Las ventas se alimentan de sesiones de fotos vendidas (reservas confirmadas
 // + pago aprobado). Esas tablas todavía no existen (Etapa 3: reservas,
@@ -19,7 +29,7 @@ const MONTH_LABEL = new Intl.DateTimeFormat("es-CO", { month: "short", year: "2-
 // cero, lista para reemplazar por una consulta real a `reservations`/
 // `payments` cuando existan.
 export async function getSalesSummary(): Promise<SalesSummary> {
-  const today = new Date();
+  const today = bogotaDateTime(todayInBogota(), "00:00:00");
 
   const daily: SalesPoint[] = Array.from({ length: 14 }, (_, i) => {
     const date = new Date(today);
@@ -33,7 +43,8 @@ export async function getSalesSummary(): Promise<SalesSummary> {
   });
 
   const monthly: SalesPoint[] = Array.from({ length: 6 }, (_, i) => {
-    const date = new Date(today.getFullYear(), today.getMonth() - (5 - i), 1);
+    const date = new Date(today);
+    date.setMonth(date.getMonth() - (5 - i));
     return { label: MONTH_LABEL.format(date), total: 0 };
   });
 

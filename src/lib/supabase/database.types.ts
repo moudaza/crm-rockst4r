@@ -289,6 +289,47 @@ export type Database = {
         }
         Relationships: []
       }
+      service_availability_windows: {
+        Row: {
+          buffer_minutes: number
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          service_id: string
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          buffer_minutes?: number
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          service_id: string
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          buffer_minutes?: number
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          service_id?: string
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_availability_windows_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
           active: boolean

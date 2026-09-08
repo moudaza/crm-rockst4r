@@ -103,7 +103,7 @@ export async function disconnectGoogleCalendar() {
   await supabase.from("google_calendar_connection").delete().eq("id", CONNECTION_ID);
 }
 
-async function getValidAccessToken(): Promise<string | null> {
+export async function getValidAccessToken(): Promise<string | null> {
   const connection = await getGoogleCalendarConnection();
   if (!connection) return null;
 
@@ -185,4 +185,35 @@ export async function listUpcomingCalendarEvents(
   }));
 
   return { events, error: null };
+}
+
+export type BusyInterval = { start: string; end: string };
+
+export async function getFreeBusy(
+  timeMin: string,
+  timeMax: string,
+): Promise<{ busy: BusyInterval[]; error: "not_connected" | "api_error" | null }> {
+  const accessToken = await getValidAccessToken();
+  if (!accessToken) return { busy: [], error: "not_connected" };
+
+  const connection = await getGoogleCalendarConnection();
+  const calendarId = connection?.calendar_id ?? "primary";
+
+  const response = await fetch("https://www.googleapis.com/calendar/v3/freeBusy", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ timeMin, timeMax, items: [{ id: calendarId }] }),
+  });
+
+  if (!response.ok) return { busy: [], error: "api_error" };
+
+  const data = (await response.json()) as {
+    calendars?: Record<string, { busy?: BusyInterval[] }>;
+  };
+  const busy = data.calendars?.[calendarId]?.busy ?? [];
+
+  return { busy, error: null };
 }

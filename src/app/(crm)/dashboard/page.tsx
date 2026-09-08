@@ -4,6 +4,7 @@ import { SalesGoalIndicator } from "@/components/crm/sales-goal-indicator";
 import { createClient } from "@/lib/supabase/server";
 import { getSalesSummary } from "@/lib/sales";
 import { RESERVATION_STATUS_LABELS, RESERVATION_STATUS_STYLES } from "@/lib/reservation-status";
+import { bogotaDateTime, todayInBogota } from "@/lib/timezone";
 
 // Cotizaciones y pagos se conectan cuando existan esas tablas/integraciones
 // (Cotizaciones vive en plataforma-cotizaciones, Pagos es Etapa 4 con BOLD).
@@ -21,13 +22,12 @@ const UPCOMING_FORMAT = new Intl.DateTimeFormat("es-CO", {
   month: "short",
   hour: "2-digit",
   minute: "2-digit",
+  timeZone: "America/Bogota",
 });
 
 export default async function DashboardPage() {
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-  const startOfTomorrow = new Date(startOfToday);
-  startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
+  const startOfToday = bogotaDateTime(todayInBogota(), "00:00:00");
+  const startOfTomorrow = new Date(startOfToday.getTime() + 24 * 60 * 60_000);
   const now = new Date();
 
   const supabase = await createClient();

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getAvailableSlots, type AvailableSlot } from "@/lib/availability";
 
 export type ReservationFormState = { error: string | null };
 
@@ -13,23 +14,30 @@ function parseContact(value: string): { lead_id: string | null; client_id: strin
   return { lead_id: null, client_id: null };
 }
 
+export async function getAvailableSlotsAction(
+  serviceId: string,
+  date: string,
+): Promise<{ slots: AvailableSlot[]; error: string | null }> {
+  if (!serviceId || !date) return { slots: [], error: null };
+  return getAvailableSlots(serviceId, date);
+}
+
 export async function createReservation(
   _prevState: ReservationFormState,
   formData: FormData,
 ): Promise<ReservationFormState> {
   const serviceId = String(formData.get("service_id") ?? "");
   const contact = String(formData.get("contact") ?? "");
-  const date = String(formData.get("date") ?? "");
-  const time = String(formData.get("time") ?? "");
+  const startsAtValue = String(formData.get("starts_at") ?? "");
   const notes = String(formData.get("notes") ?? "").trim() || null;
 
   if (!serviceId) return { error: "Elegí un servicio." };
   const { lead_id, client_id } = parseContact(contact);
   if (!lead_id && !client_id) return { error: "Elegí un prospecto o cliente." };
-  if (!date || !time) return { error: "Elegí fecha y hora." };
+  if (!startsAtValue) return { error: "Elegí un horario disponible." };
 
-  const startsAt = new Date(`${date}T${time}`);
-  if (Number.isNaN(startsAt.getTime())) return { error: "Fecha u hora inválida." };
+  const startsAt = new Date(startsAtValue);
+  if (Number.isNaN(startsAt.getTime())) return { error: "Horario inválido." };
 
   const supabase = await createClient();
   const { error } = await supabase.rpc("create_pre_reservation", {
