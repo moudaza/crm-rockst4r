@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ReservationActions } from "@/components/crm/reservation-actions";
 import { RESERVATION_STATUS_LABELS, RESERVATION_STATUS_STYLES } from "@/lib/reservation-status";
+import { getGoogleCalendarConnection } from "@/lib/integrations/google-calendar";
 import { confirmReservation, cancelReservation } from "./actions";
 
 const DATETIME_FORMAT = new Intl.DateTimeFormat("es-CO", {
@@ -18,14 +19,17 @@ export default async function CalendarioPage() {
   yesterday.setDate(yesterday.getDate() - 1);
 
   const supabase = await createClient();
-  const { data: reservations } = await supabase
-    .from("reservations")
-    .select(
-      "id, status, starts_at, ends_at, expires_at, notes, services(name), leads(name), clients(name)",
-    )
-    .gte("starts_at", yesterday.toISOString())
-    .order("starts_at", { ascending: true })
-    .limit(100);
+  const [{ data: reservations }, googleConnection] = await Promise.all([
+    supabase
+      .from("reservations")
+      .select(
+        "id, status, starts_at, ends_at, expires_at, notes, services(name), leads(name), clients(name)",
+      )
+      .gte("starts_at", yesterday.toISOString())
+      .order("starts_at", { ascending: true })
+      .limit(100),
+    getGoogleCalendarConnection(),
+  ]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -35,9 +39,9 @@ export default async function CalendarioPage() {
             Calendario
           </h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            Reservas y pre-reservas. La sincronización con Google Calendar
-            todavía no está conectada — falta crear las credenciales OAuth en
-            Google Cloud.
+            {googleConnection
+              ? `Reservas y pre-reservas, sincronizadas con Google Calendar (${googleConnection.calendar_email ?? googleConnection.calendar_id}).`
+              : "Reservas y pre-reservas. Google Calendar no está conectado — conectalo en Configuración para ver disponibilidad real y sincronizar reservas confirmadas."}
           </p>
         </div>
         <Link
