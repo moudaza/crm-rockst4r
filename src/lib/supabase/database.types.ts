@@ -206,6 +206,7 @@ export type Database = {
           created_at: string
           ends_at: string
           expires_at: string | null
+          google_event_id: string | null
           id: string
           lead_id: string | null
           notes: string | null
@@ -222,6 +223,7 @@ export type Database = {
           created_at?: string
           ends_at: string
           expires_at?: string | null
+          google_event_id?: string | null
           id?: string
           lead_id?: string | null
           notes?: string | null
@@ -238,6 +240,7 @@ export type Database = {
           created_at?: string
           ends_at?: string
           expires_at?: string | null
+          google_event_id?: string | null
           id?: string
           lead_id?: string | null
           notes?: string | null
@@ -392,6 +395,7 @@ export type Database = {
           created_at: string
           ends_at: string
           expires_at: string | null
+          google_event_id: string | null
           id: string
           lead_id: string | null
           notes: string | null

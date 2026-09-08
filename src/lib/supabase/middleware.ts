@@ -25,6 +25,13 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
+  // Páginas legales: públicas siempre, sin importar si hay sesión o no (no
+  // redirigen en ningún sentido) — a diferencia de /login, que sí redirige.
+  const ALWAYS_PUBLIC_ROUTES = ["/privacidad", "/terminos"];
+  if (ALWAYS_PUBLIC_ROUTES.includes(request.nextUrl.pathname)) {
+    return supabaseResponse;
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser();

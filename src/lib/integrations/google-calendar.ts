@@ -217,3 +217,63 @@ export async function getFreeBusy(
 
   return { busy, error: null };
 }
+
+/**
+ * Crea el evento en Google Calendar correspondiente a una reserva
+ * CONFIRMED del CRM. Devuelve null si no hay conexión o si Google rechaza
+ * la creación — quien llama debe seguir adelante igual (el CRM sigue siendo
+ * la fuente de verdad de la reserva, el evento de Calendar es un reflejo).
+ */
+export async function createCalendarEvent(event: {
+  summary: string;
+  description?: string;
+  startsAt: string;
+  endsAt: string;
+}): Promise<{ id: string } | null> {
+  const accessToken = await getValidAccessToken();
+  if (!accessToken) return null;
+
+  const connection = await getGoogleCalendarConnection();
+  const calendarId = connection?.calendar_id ?? "primary";
+
+  const response = await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        summary: event.summary,
+        description: event.description,
+        start: { dateTime: event.startsAt, timeZone: "America/Bogota" },
+        end: { dateTime: event.endsAt, timeZone: "America/Bogota" },
+      }),
+    },
+  );
+
+  if (!response.ok) return null;
+
+  const data = (await response.json()) as { id: string };
+  return { id: data.id };
+}
+
+/** Borra el evento de Google Calendar de una reserva cancelada. Falla en
+ * silencio si no hay conexión o Google rechaza el borrado — el estado del
+ * CRM (CANCELLED) manda igual. */
+export async function deleteCalendarEvent(eventId: string): Promise<void> {
+  const accessToken = await getValidAccessToken();
+  if (!accessToken) return;
+
+  const connection = await getGoogleCalendarConnection();
+  const calendarId = connection?.calendar_id ?? "primary";
+
+  await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`,
+    {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
+}
