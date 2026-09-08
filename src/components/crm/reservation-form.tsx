@@ -170,7 +170,7 @@ export function ReservationForm({
                     onClick={() => setTime(slotTime)}
                     className={`rounded-md border px-2 py-1.5 text-sm transition-colors ${
                       time === slotTime
-                        ? "border-zinc-900 bg-zinc-900 text-white dark:border-zinc-50 dark:bg-zinc-50 dark:text-zinc-900"
+                        ? "border-[#0071e3] bg-[#0071e3] text-white dark:border-[#0a84ff] dark:bg-[#0a84ff] dark:text-white"
                         : "border-zinc-300 text-zinc-700 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-500"
                     }`}
                   >
@@ -200,13 +200,13 @@ export function ReservationForm({
             !contact ||
             (isNewContact && !newContactName.trim())
           }
-          className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          className="btn-primary"
         >
           {pending ? "Reservando..." : "Pre-reservar"}
         </button>
         <Link
           href="/calendario"
-          className="rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+          className="btn-secondary"
         >
           Cancelar
         </Link>

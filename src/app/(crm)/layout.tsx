@@ -17,7 +17,7 @@ export default async function CrmLayout({
       <Sidebar />
       <div className="flex flex-1 flex-col">
         <Topbar email={user?.email ?? null} />
-        <main className="flex-1 overflow-y-auto bg-zinc-50 p-6 dark:bg-black">
+        <main className="flex-1 overflow-y-auto bg-[#f5f5f7] p-6 dark:bg-black">
           {children}
         </main>
       </div>

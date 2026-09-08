@@ -21,7 +21,7 @@ export default async function TareasPage() {
           href="https://tareas.bymoudaza.workers.dev/"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex w-fit shrink-0 items-center rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          className="btn-primary w-fit"
         >
           Abrir Tareas (MagicFlow) →
         </a>

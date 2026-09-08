@@ -10,7 +10,7 @@ export function SalesGoalIndicator({ currentMonthTotal }: { currentMonthTotal: n
   const reachedMin = currentMonthTotal >= MONTHLY_MIN_GOAL;
 
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+    <div className="card p-5">
       <div className="flex items-baseline justify-between">
         <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
           Meta del mes
@@ -23,7 +23,7 @@ export function SalesGoalIndicator({ currentMonthTotal }: { currentMonthTotal: n
       <div className="relative mt-4 h-2 w-full rounded-full bg-zinc-100 dark:bg-zinc-900">
         <div
           className={`h-2 rounded-full transition-all ${
-            reachedMin ? "bg-emerald-500" : "bg-zinc-900 dark:bg-zinc-50"
+            reachedMin ? "bg-emerald-500" : "bg-[#0071e3] dark:bg-[#0a84ff]"
           }`}
           style={{ width: `${progressToRecommended}%` }}
         />

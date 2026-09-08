@@ -34,7 +34,7 @@ export function SalesChart({
   const data = { daily, weekly, monthly }[tab];
 
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+    <div className="card p-5">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
           Ventas

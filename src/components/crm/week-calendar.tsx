@@ -111,7 +111,7 @@ export function WeekCalendar({
         <span className="text-sm font-medium text-zinc-500 dark:text-zinc-400">{rangeLabel}</span>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
+      <div className="card overflow-x-auto">
         <div className="grid min-w-[720px] grid-cols-[56px_repeat(7,1fr)]">
           <div className="border-b border-zinc-200 dark:border-zinc-800" />
           {weekDates.map((dateStr, i) => (
@@ -119,7 +119,7 @@ export function WeekCalendar({
               key={dateStr}
               className={`border-b border-l border-zinc-200 px-2 py-2 text-center text-xs font-medium dark:border-zinc-800 ${
                 dateStr === todayDateStr
-                  ? "bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900"
+                  ? "bg-[#0071e3] text-white dark:bg-[#0a84ff] dark:text-white"
                   : "text-zinc-500 dark:text-zinc-400"
               }`}
             >
@@ -191,7 +191,7 @@ export function WeekCalendar({
                     onClick={() => setSelectedKey(isSelected ? null : rowKey(row))}
                     style={{ top: Math.max(0, top), height: Math.max(18, height), ...inlineColor }}
                     className={`absolute inset-x-0.5 overflow-hidden rounded px-1 py-0.5 text-left text-[11px] leading-tight ring-1 ring-inset transition-shadow ${colorClass} ${
-                      isSelected ? "ring-2 ring-zinc-900 dark:ring-zinc-50" : "ring-transparent"
+                      isSelected ? "ring-2 ring-[#0071e3] dark:ring-[#0a84ff]" : "ring-transparent"
                     }`}
                   >
                     <span className="block truncate font-medium">
@@ -207,7 +207,7 @@ export function WeekCalendar({
       </div>
 
       {selectedRow && (
-        <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
+        <div className="card p-4">
           {selectedRow.source === "crm" ? (
             <div className="flex items-center justify-between">
               <div>

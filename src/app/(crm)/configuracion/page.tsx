@@ -54,7 +54,7 @@ export default async function ConfiguracionPage({
         </p>
       )}
 
-      <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+      <div className="card p-5">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
@@ -72,7 +72,7 @@ export default async function ConfiguracionPage({
           ) : (
             <a
               href="/api/auth/google/connect"
-              className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+              className="btn-primary"
             >
               Conectar Google Calendar
             </a>

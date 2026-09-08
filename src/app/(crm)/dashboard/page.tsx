@@ -1,3 +1,4 @@
+import { CalendarCheck, CalendarClock, UserPlus, FileText, Wallet, Receipt, CheckSquare } from "lucide-react";
 import { StatCard } from "@/components/crm/stat-card";
 import { SalesChart } from "@/components/crm/sales-chart";
 import { SalesGoalIndicator } from "@/components/crm/sales-goal-indicator";
@@ -10,10 +11,10 @@ import { bogotaDateTime, todayInBogota } from "@/lib/timezone";
 // (Cotizaciones vive en plataforma-cotizaciones, Pagos es Etapa 4 con BOLD).
 // Tareas vive en MagicFlow (tareas.bymoudaza.workers.dev), no en este CRM.
 const PLACEHOLDER_STATS = [
-  { label: "Cotizaciones pendientes", value: 0 },
-  { label: "Pagos pendientes", value: 0 },
-  { label: "Pagos recientes", value: 0 },
-  { label: "Tareas pendientes", value: 0 },
+  { label: "Cotizaciones pendientes", value: 0, icon: FileText, color: "#ff2d55" },
+  { label: "Pagos pendientes", value: 0, icon: Wallet, color: "#ff9500" },
+  { label: "Pagos recientes", value: 0, icon: Receipt, color: "#34c759" },
+  { label: "Tareas pendientes", value: 0, icon: CheckSquare, color: "#ffcc00" },
 ];
 
 const UPCOMING_FORMAT = new Intl.DateTimeFormat("es-CO", {
@@ -72,11 +73,11 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Reservas de hoy" value={todayCount ?? 0} />
-        <StatCard label="Próximas reservas" value={upcomingCount ?? 0} />
-        <StatCard label="Prospectos nuevos" value={newLeadsCount ?? 0} />
+        <StatCard label="Reservas de hoy" value={todayCount ?? 0} icon={CalendarCheck} color="#0071e3" />
+        <StatCard label="Próximas reservas" value={upcomingCount ?? 0} icon={CalendarClock} color="#ff3b30" />
+        <StatCard label="Prospectos nuevos" value={newLeadsCount ?? 0} icon={UserPlus} color="#ff9500" />
         {PLACEHOLDER_STATS.map((stat) => (
-          <StatCard key={stat.label} label={stat.label} value={stat.value} />
+          <StatCard key={stat.label} label={stat.label} value={stat.value} icon={stat.icon} color={stat.color} />
         ))}
       </div>
 
@@ -87,7 +88,7 @@ export default async function DashboardPage() {
         <SalesGoalIndicator currentMonthTotal={sales.currentMonthTotal} />
       </div>
 
-      <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+      <div className="card p-5">
         <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
           Próximas sesiones
         </h2>

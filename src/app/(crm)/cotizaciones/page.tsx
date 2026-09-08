@@ -15,7 +15,7 @@ export default function CotizacionesPage() {
         href="https://plataforma-cotizaciones.vercel.app/"
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex w-fit items-center rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+        className="btn-primary w-fit"
       >
         Abrir Cotizaciones →
       </a>
