@@ -14,6 +14,111 @@ export type Database = {
   }
   public: {
     Tables: {
+      clients: {
+        Row: {
+          address: string | null
+          created_at: string
+          document: string | null
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          document?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          document?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      leads: {
+        Row: {
+          converted_to_client_id: string | null
+          created_at: string
+          email: string | null
+          id: string
+          last_contacted_at: string | null
+          name: string
+          next_follow_up_at: string | null
+          notes: string | null
+          phone: string | null
+          service_id: string | null
+          source: string | null
+          status: Database["public"]["Enums"]["lead_status"]
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          converted_to_client_id?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          last_contacted_at?: string | null
+          name: string
+          next_follow_up_at?: string | null
+          notes?: string | null
+          phone?: string | null
+          service_id?: string | null
+          source?: string | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          converted_to_client_id?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          last_contacted_at?: string | null
+          name?: string
+          next_follow_up_at?: string | null
+          notes?: string | null
+          phone?: string | null
+          service_id?: string | null
+          source?: string | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_converted_to_client_id_fkey"
+            columns: ["converted_to_client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -114,6 +219,14 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      lead_status:
+        | "NUEVO"
+        | "CONTACTADO"
+        | "COTIZACION_ENVIADA"
+        | "EN_NEGOCIACION"
+        | "RESERVADO"
+        | "CLIENTE"
+        | "PERDIDO"
       service_payment_type: "FULL" | "DEPOSIT"
     }
     CompositeTypes: {
@@ -242,6 +355,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      lead_status: [
+        "NUEVO",
+        "CONTACTADO",
+        "COTIZACION_ENVIADA",
+        "EN_NEGOCIACION",
+        "RESERVADO",
+        "CLIENTE",
+        "PERDIDO",
+      ],
       service_payment_type: ["FULL", "DEPOSIT"],
     },
   },

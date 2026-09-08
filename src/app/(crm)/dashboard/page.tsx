@@ -1,12 +1,11 @@
 import { StatCard } from "@/components/crm/stat-card";
+import { createClient } from "@/lib/supabase/server";
 
-// Etapa 1: layout y estructura del dashboard con datos en cero.
-// Las métricas reales se conectan a Supabase a partir de Etapa 2
-// (prospectos/clientes/cotizaciones) y Etapa 3-4 (reservas/pagos).
-const STATS = [
+// Reservas, cotizaciones, pagos y tareas se conectan cuando existan esas
+// tablas (Etapa 2 en curso, Etapa 3-4 para reservas/pagos).
+const PLACEHOLDER_STATS = [
   { label: "Reservas de hoy", value: 0 },
   { label: "Próximas reservas", value: 0 },
-  { label: "Prospectos nuevos", value: 0 },
   { label: "Cotizaciones pendientes", value: 0 },
   { label: "Pagos pendientes", value: 0 },
   { label: "Pagos recientes", value: 0 },
@@ -14,7 +13,13 @@ const STATS = [
   { label: "Resumen de ventas", value: "$0" },
 ];
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const supabase = await createClient();
+  const { count: newLeadsCount } = await supabase
+    .from("leads")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "NUEVO");
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -27,7 +32,8 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {STATS.map((stat) => (
+        <StatCard label="Prospectos nuevos" value={newLeadsCount ?? 0} />
+        {PLACEHOLDER_STATS.map((stat) => (
           <StatCard key={stat.label} label={stat.label} value={stat.value} />
         ))}
       </div>
