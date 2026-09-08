@@ -1,7 +1,9 @@
 import "server-only";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { getFreeBusy } from "@/lib/integrations/google-calendar";
 import { bogotaDateTime } from "@/lib/timezone";
+import type { Database } from "@/lib/supabase/database.types";
 
 export type AvailableSlot = { startsAt: string; endsAt: string };
 
@@ -22,12 +24,17 @@ function intervalsOverlap(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date): b
  * 3) las reservas propias del CRM (PRE_RESERVED vigentes + CONFIRMED) —
  *    necesario porque reservar en el CRM todavía no crea el evento en
  *    Google Calendar, así que ninguna de las dos fuentes por sí sola alcanza.
+ *
+ * `client` es opcional — por defecto usa el cliente con sesión del staff
+ * (RLS normal). Las rutas de Manychat, que llaman sin sesión de usuario,
+ * pasan un cliente `service_role` para saltar RLS.
  */
 export async function getAvailableSlots(
   serviceId: string,
   date: string,
+  client?: SupabaseClient<Database>,
 ): Promise<{ slots: AvailableSlot[]; error: AvailabilityError | null }> {
-  const supabase = await createClient();
+  const supabase = client ?? (await createClient());
 
   const { data: service } = await supabase
     .from("services")
@@ -75,6 +82,7 @@ export async function getAvailableSlots(
   const { busy, error: freeBusyError } = await getFreeBusy(
     dayStart.toISOString(),
     dayEnd.toISOString(),
+    client,
   );
   if (freeBusyError) {
     return {

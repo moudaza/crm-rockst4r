@@ -1,5 +1,9 @@
 import "server-only";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/lib/supabase/database.types";
+
+type Client = SupabaseClient<Database>;
 
 // Integración OAuth con Google Calendar. Conexión única compartida por todo
 // el equipo (una sola fila en google_calendar_connection), no una cuenta de
@@ -33,8 +37,8 @@ export function getGoogleAuthUrl() {
   return `${GOOGLE_AUTH_URL}?${params.toString()}`;
 }
 
-export async function getGoogleCalendarConnection() {
-  const supabase = await createClient();
+export async function getGoogleCalendarConnection(client?: Client) {
+  const supabase = client ?? (await createClient());
   const { data } = await supabase
     .from("google_calendar_connection")
     .select("*")
@@ -103,8 +107,8 @@ export async function disconnectGoogleCalendar() {
   await supabase.from("google_calendar_connection").delete().eq("id", CONNECTION_ID);
 }
 
-export async function getValidAccessToken(): Promise<string | null> {
-  const connection = await getGoogleCalendarConnection();
+export async function getValidAccessToken(client?: Client): Promise<string | null> {
+  const connection = await getGoogleCalendarConnection(client);
   if (!connection) return null;
 
   const expiresAt = new Date(connection.token_expires_at);
@@ -130,7 +134,7 @@ export async function getValidAccessToken(): Promise<string | null> {
   const newExpiresAt = new Date();
   newExpiresAt.setSeconds(newExpiresAt.getSeconds() + tokens.expires_in);
 
-  const supabase = await createClient();
+  const supabase = client ?? (await createClient());
   await supabase
     .from("google_calendar_connection")
     .update({ access_token: tokens.access_token, token_expires_at: newExpiresAt.toISOString() })
@@ -256,11 +260,12 @@ export type BusyInterval = { start: string; end: string };
 export async function getFreeBusy(
   timeMin: string,
   timeMax: string,
+  client?: Client,
 ): Promise<{ busy: BusyInterval[]; error: "not_connected" | "api_error" | null }> {
-  const accessToken = await getValidAccessToken();
+  const accessToken = await getValidAccessToken(client);
   if (!accessToken) return { busy: [], error: "not_connected" };
 
-  const connection = await getGoogleCalendarConnection();
+  const connection = await getGoogleCalendarConnection(client);
   const calendarId = connection?.calendar_id ?? "primary";
 
   const response = await fetch("https://www.googleapis.com/calendar/v3/freeBusy", {
