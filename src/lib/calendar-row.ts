@@ -15,4 +15,6 @@ export type CalendarRow =
       startsAt: string;
       endsAt: string;
       summary: string;
+      backgroundColor: string;
+      foregroundColor: string;
     };

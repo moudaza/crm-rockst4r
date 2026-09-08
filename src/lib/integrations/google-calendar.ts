@@ -144,6 +144,7 @@ export type GoogleCalendarEvent = {
   summary: string;
   start: string;
   end: string;
+  colorId?: string;
 };
 
 type RawGoogleEvent = {
@@ -151,6 +152,7 @@ type RawGoogleEvent = {
   summary?: string;
   start?: { dateTime?: string; date?: string };
   end?: { dateTime?: string; date?: string };
+  colorId?: string;
 };
 
 async function fetchCalendarEvents(params: {
@@ -190,9 +192,51 @@ async function fetchCalendarEvents(params: {
       summary: item.summary ?? "(sin título)",
       start: item.start!.dateTime!,
       end: item.end!.dateTime!,
+      colorId: item.colorId,
     }));
 
   return { events, error: null };
+}
+
+export type GoogleColor = { background: string; foreground: string };
+
+/** Paleta de colores de EVENTO de Google (colorId de un evento individual,
+ * distinta de la paleta de colores de calendario). */
+export async function getEventColorPalette(): Promise<Record<string, GoogleColor>> {
+  const accessToken = await getValidAccessToken();
+  if (!accessToken) return {};
+
+  const response = await fetch("https://www.googleapis.com/calendar/v3/colors", {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!response.ok) return {};
+
+  const data = (await response.json()) as { event?: Record<string, GoogleColor> };
+  return data.event ?? {};
+}
+
+/** Color por defecto del calendario conectado (el que usan los eventos sin
+ * `colorId` propio, tal como se ven en Google Calendar). */
+export async function getConnectedCalendarColor(): Promise<GoogleColor | null> {
+  const accessToken = await getValidAccessToken();
+  if (!accessToken) return null;
+
+  const connection = await getGoogleCalendarConnection();
+  const calendarId = connection?.calendar_id ?? "primary";
+
+  const response = await fetch(
+    `https://www.googleapis.com/calendar/v3/users/me/calendarList/${encodeURIComponent(calendarId)}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  if (!response.ok) return null;
+
+  const data = (await response.json()) as {
+    backgroundColor?: string;
+    foregroundColor?: string;
+  };
+  if (!data.backgroundColor) return null;
+
+  return { background: data.backgroundColor, foreground: data.foregroundColor ?? "#000000" };
 }
 
 export async function listUpcomingCalendarEvents(maxResults = 5) {

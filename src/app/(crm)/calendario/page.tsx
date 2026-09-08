@@ -4,6 +4,9 @@ import { WeekCalendar } from "@/components/crm/week-calendar";
 import {
   getGoogleCalendarConnection,
   listCalendarEventsInRange,
+  getEventColorPalette,
+  getConnectedCalendarColor,
+  type GoogleColor,
 } from "@/lib/integrations/google-calendar";
 import { todayInBogota } from "@/lib/timezone";
 import type { CalendarRow } from "@/lib/calendar-row";
@@ -15,7 +18,13 @@ export default async function CalendarioPage() {
   horizon.setDate(horizon.getDate() + 90);
 
   const supabase = await createClient();
-  const [{ data: reservations }, googleConnection, googleEventsResult] = await Promise.all([
+  const [
+    { data: reservations },
+    googleConnection,
+    googleEventsResult,
+    eventColorPalette,
+    calendarDefaultColor,
+  ] = await Promise.all([
     supabase
       .from("reservations")
       .select(
@@ -26,11 +35,17 @@ export default async function CalendarioPage() {
       .limit(200),
     getGoogleCalendarConnection(),
     listCalendarEventsInRange(now.toISOString(), horizon.toISOString()),
+    getEventColorPalette(),
+    getConnectedCalendarColor(),
   ]);
 
   const syncedGoogleEventIds = new Set(
     (reservations ?? []).map((r) => r.google_event_id).filter((id): id is string => !!id),
   );
+
+  const fallbackColor: GoogleColor = { background: "#4285F4", foreground: "#ffffff" };
+  const resolveColor = (colorId: string | undefined): GoogleColor =>
+    (colorId && eventColorPalette[colorId]) || calendarDefaultColor || fallbackColor;
 
   const crmRows: CalendarRow[] = (reservations ?? []).map((r) => ({
     source: "crm",
@@ -45,13 +60,18 @@ export default async function CalendarioPage() {
 
   const googleRows: CalendarRow[] = googleEventsResult.events
     .filter((event) => event.start && event.end && !syncedGoogleEventIds.has(event.id))
-    .map((event) => ({
-      source: "google",
-      id: event.id,
-      startsAt: event.start!,
-      endsAt: event.end!,
-      summary: event.summary,
-    }));
+    .map((event) => {
+      const color = resolveColor(event.colorId);
+      return {
+        source: "google",
+        id: event.id,
+        startsAt: event.start!,
+        endsAt: event.end!,
+        summary: event.summary,
+        backgroundColor: color.background,
+        foregroundColor: color.foreground,
+      };
+    });
 
   const rows = [...crmRows, ...googleRows];
 

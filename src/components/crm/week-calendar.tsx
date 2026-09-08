@@ -157,14 +157,22 @@ export function WeekCalendar({
 
                 const label =
                   row.source === "crm" ? `${row.contactName}` : row.summary;
+                // Los eventos de Google heredan su color real (colorId del
+                // evento, o el color por defecto del calendario si no
+                // tiene uno propio) — resuelto server-side. Las reservas
+                // del CRM usan el color de su estado.
                 const colorClass =
                   row.source === "google"
-                    ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+                    ? ""
                     : row.status === "CONFIRMED"
                       ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
                       : row.status === "PRE_RESERVED"
                         ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
                         : "bg-zinc-100 text-zinc-500 dark:bg-zinc-900 dark:text-zinc-500";
+                const inlineColor =
+                  row.source === "google"
+                    ? { backgroundColor: row.backgroundColor, color: row.foregroundColor }
+                    : {};
 
                 if (top + height < 0 || top > (HOUR_END - HOUR_START) * HOUR_HEIGHT) return null;
 
@@ -173,7 +181,7 @@ export function WeekCalendar({
                     key={rowKey(row)}
                     type="button"
                     onClick={() => setSelectedKey(isSelected ? null : rowKey(row))}
-                    style={{ top: Math.max(0, top), height: Math.max(18, height) }}
+                    style={{ top: Math.max(0, top), height: Math.max(18, height), ...inlineColor }}
                     className={`absolute inset-x-0.5 overflow-hidden rounded px-1 py-0.5 text-left text-[11px] leading-tight ring-1 ring-inset transition-shadow ${colorClass} ${
                       isSelected ? "ring-2 ring-zinc-900 dark:ring-zinc-50" : "ring-transparent"
                     }`}
