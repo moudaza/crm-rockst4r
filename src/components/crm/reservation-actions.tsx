@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import type { GeneratePaymentLinkResult } from "@/app/(crm)/calendario/actions";
+import { MANUAL_PAYMENT_ACCOUNTS } from "@/lib/manual-payment-info";
 
 export function ReservationActions({
   id,
@@ -19,6 +20,7 @@ export function ReservationActions({
   const [isPending, startTransition] = useTransition();
   const [isPaymentPending, startPaymentTransition] = useTransition();
   const [paymentResult, setPaymentResult] = useState<GeneratePaymentLinkResult | null>(null);
+  const [showManualPayment, setShowManualPayment] = useState(false);
 
   if (status !== "PRE_RESERVED" && status !== "CONFIRMED") {
     return <span className="text-sm text-zinc-400 dark:text-zinc-600">—</span>;
@@ -40,6 +42,13 @@ export function ReservationActions({
               className="text-sm font-medium text-sky-600 hover:text-sky-700 disabled:opacity-50 dark:text-sky-400"
             >
               {isPaymentPending ? "Generando..." : "Generar link de pago"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowManualPayment((v) => !v)}
+              className="text-sm font-medium text-zinc-600 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+            >
+              Transferencia manual
             </button>
             <button
               type="button"
@@ -72,6 +81,19 @@ export function ReservationActions({
         >
           {paymentResult.checkoutUrl}
         </a>
+      )}
+      {showManualPayment && (
+        <div className="flex w-full max-w-xs flex-col gap-1.5 rounded-md border border-zinc-200 bg-zinc-50 p-3 text-right text-sm dark:border-zinc-800 dark:bg-zinc-900">
+          {MANUAL_PAYMENT_ACCOUNTS.map((account) => (
+            <p key={account.method}>
+              <span className="font-medium text-zinc-700 dark:text-zinc-300">{account.method}:</span>{" "}
+              <span className="text-zinc-600 dark:text-zinc-400">{account.detail}</span>
+            </p>
+          ))}
+          <p className="text-xs text-zinc-400 dark:text-zinc-600">
+            Copiá y enviá al cliente. Una vez verificada la transferencia, tocá &quot;Confirmar&quot;.
+          </p>
+        </div>
       )}
     </div>
   );
