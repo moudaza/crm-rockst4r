@@ -90,7 +90,11 @@ export type BoldWebhookPayload = {
   subject: string;
   data: {
     payment_id?: string;
-    external_reference?: string;
+    // La referencia que nosotros generamos al crear el link (nuestro
+    // `payments.reference`) viaja en data.metadata.reference — confirmado
+    // contra un webhook real (2026-09-08), no en data.external_reference
+    // como sugería la documentación pública.
+    metadata?: { reference?: string };
     [key: string]: unknown;
   };
 };
