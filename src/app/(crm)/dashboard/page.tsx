@@ -2,7 +2,8 @@ import { StatCard } from "@/components/crm/stat-card";
 import { createClient } from "@/lib/supabase/server";
 
 // Reservas, cotizaciones, pagos y tareas se conectan cuando existan esas
-// tablas (Etapa 2 en curso, Etapa 3-4 para reservas/pagos).
+// tablas (Etapa 2 en curso, Etapa 3-4 para reservas/pagos). Tareas vive en
+// MagicFlow (tareas.bymoudaza.workers.dev), no en este CRM.
 const PLACEHOLDER_STATS = [
   { label: "Reservas de hoy", value: 0 },
   { label: "Próximas reservas", value: 0 },
