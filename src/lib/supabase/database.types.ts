@@ -151,6 +151,79 @@ export type Database = {
           },
         ]
       }
+      reservations: {
+        Row: {
+          cancelled_at: string | null
+          client_id: string | null
+          confirmed_at: string | null
+          created_at: string
+          ends_at: string
+          expires_at: string | null
+          id: string
+          lead_id: string | null
+          notes: string | null
+          reserved_at: string
+          service_id: string
+          starts_at: string
+          status: Database["public"]["Enums"]["reservation_status"]
+          updated_at: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          client_id?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          ends_at: string
+          expires_at?: string | null
+          id?: string
+          lead_id?: string | null
+          notes?: string | null
+          reserved_at?: string
+          service_id: string
+          starts_at: string
+          status?: Database["public"]["Enums"]["reservation_status"]
+          updated_at?: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          client_id?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          ends_at?: string
+          expires_at?: string | null
+          id?: string
+          lead_id?: string | null
+          notes?: string | null
+          reserved_at?: string
+          service_id?: string
+          starts_at?: string
+          status?: Database["public"]["Enums"]["reservation_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservations_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservations_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       roles: {
         Row: {
           created_at: string
@@ -216,7 +289,37 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_pre_reservation: {
+        Args: {
+          p_client_id?: string
+          p_lead_id?: string
+          p_notes?: string
+          p_service_id: string
+          p_starts_at: string
+        }
+        Returns: {
+          cancelled_at: string | null
+          client_id: string | null
+          confirmed_at: string | null
+          created_at: string
+          ends_at: string
+          expires_at: string | null
+          id: string
+          lead_id: string | null
+          notes: string | null
+          reserved_at: string
+          service_id: string
+          starts_at: string
+          status: Database["public"]["Enums"]["reservation_status"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "reservations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       lead_status:
@@ -227,6 +330,7 @@ export type Database = {
         | "RESERVADO"
         | "CLIENTE"
         | "PERDIDO"
+      reservation_status: "PRE_RESERVED" | "CONFIRMED" | "EXPIRED" | "CANCELLED"
       service_payment_type: "FULL" | "DEPOSIT"
     }
     CompositeTypes: {
@@ -364,6 +468,7 @@ export const Constants = {
         "CLIENTE",
         "PERDIDO",
       ],
+      reservation_status: ["PRE_RESERVED", "CONFIRMED", "EXPIRED", "CANCELLED"],
       service_payment_type: ["FULL", "DEPOSIT"],
     },
   },
