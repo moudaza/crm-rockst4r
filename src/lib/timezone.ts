@@ -13,3 +13,29 @@ export function bogotaDateTime(date: string, time: string): Date {
 export function todayInBogota(): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: STUDIO_TIME_ZONE }).format(new Date());
 }
+
+/** Fecha ("YYYY-MM-DD") de un instante cualquiera, en Bogotá. */
+export function toBogotaDateString(iso: string): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: STUDIO_TIME_ZONE }).format(new Date(iso));
+}
+
+/** Hora y minuto (0-23 / 0-59) de un instante cualquiera, en Bogotá. */
+export function toBogotaHourMinute(iso: string): { hour: number; minute: number } {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: STUDIO_TIME_ZONE,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date(iso));
+  const hour = Number(parts.find((p) => p.type === "hour")?.value ?? "0");
+  const minute = Number(parts.find((p) => p.type === "minute")?.value ?? "0");
+  return { hour, minute };
+}
+
+/** Lunes (00:00 Bogotá) de la semana que contiene `dateStr` ("YYYY-MM-DD"). */
+export function startOfWeekBogota(dateStr: string): Date {
+  const midnight = bogotaDateTime(dateStr, "00:00:00");
+  const dayOfWeek = midnight.getDay(); // 0=domingo … 6=sábado
+  const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  return new Date(midnight.getTime() - daysSinceMonday * 24 * 60 * 60_000);
+}
