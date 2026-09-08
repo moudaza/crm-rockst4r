@@ -10,7 +10,7 @@ import {
 } from "@/lib/integrations/google-calendar";
 import { todayInBogota } from "@/lib/timezone";
 import type { CalendarRow } from "@/lib/calendar-row";
-import { confirmReservation, cancelReservation, generatePaymentLink } from "./actions";
+import { confirmReservation, cancelReservation, generatePaymentLink, deleteReservation } from "./actions";
 
 export default async function CalendarioPage() {
   const now = new Date();
@@ -102,6 +102,7 @@ export default async function CalendarioPage() {
         confirmAction={confirmReservation}
         cancelAction={cancelReservation}
         generatePaymentLinkAction={generatePaymentLink}
+        deleteAction={deleteReservation}
       />
     </div>
   );

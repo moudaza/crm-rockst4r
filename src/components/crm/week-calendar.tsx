@@ -34,12 +34,14 @@ export function WeekCalendar({
   confirmAction,
   cancelAction,
   generatePaymentLinkAction,
+  deleteAction,
 }: {
   rows: CalendarRow[];
   todayDateStr: string;
   confirmAction: (id: string) => Promise<void>;
   cancelAction: (id: string) => Promise<void>;
   generatePaymentLinkAction: (id: string) => Promise<GeneratePaymentLinkResult>;
+  deleteAction: (id: string) => Promise<void>;
 }) {
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
@@ -226,6 +228,7 @@ export function WeekCalendar({
                 confirmAction={confirmAction}
                 cancelAction={cancelAction}
                 generatePaymentLinkAction={generatePaymentLinkAction}
+                deleteAction={deleteAction}
               />
             </div>
           ) : (

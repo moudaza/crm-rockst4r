@@ -197,3 +197,17 @@ export async function cancelReservation(id: string) {
     .eq("id", id);
   revalidatePath("/calendario");
 }
+
+/** Borra definitivamente una reserva Cancelada o Vencida — esas quedaban
+ * pegadas visualmente en el calendario sin forma de sacarlas. No aplica a
+ * PRE_RESERVED/CONFIRMED (para esas hay que cancelar primero, que limpia el
+ * evento de Google si corresponde). */
+export async function deleteReservation(id: string) {
+  const supabase = await createClient();
+  await supabase
+    .from("reservations")
+    .delete()
+    .eq("id", id)
+    .in("status", ["CANCELLED", "EXPIRED"]);
+  revalidatePath("/calendario");
+}

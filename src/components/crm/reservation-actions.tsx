@@ -10,20 +10,35 @@ export function ReservationActions({
   confirmAction,
   cancelAction,
   generatePaymentLinkAction,
+  deleteAction,
 }: {
   id: string;
   status: "PRE_RESERVED" | "CONFIRMED" | "EXPIRED" | "CANCELLED";
   confirmAction: (id: string) => Promise<void>;
   cancelAction: (id: string) => Promise<void>;
   generatePaymentLinkAction: (id: string) => Promise<GeneratePaymentLinkResult>;
+  deleteAction: (id: string) => Promise<void>;
 }) {
   const [isPending, startTransition] = useTransition();
   const [isPaymentPending, startPaymentTransition] = useTransition();
   const [paymentResult, setPaymentResult] = useState<GeneratePaymentLinkResult | null>(null);
   const [showManualPayment, setShowManualPayment] = useState(false);
 
-  if (status !== "PRE_RESERVED" && status !== "CONFIRMED") {
-    return <span className="text-sm text-zinc-400 dark:text-zinc-600">—</span>;
+  if (status === "CANCELLED" || status === "EXPIRED") {
+    return (
+      <button
+        type="button"
+        disabled={isPending}
+        onClick={() => {
+          if (confirm("¿Eliminar esta reserva definitivamente? No se puede deshacer.")) {
+            startTransition(() => deleteAction(id));
+          }
+        }}
+        className="text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50 dark:text-red-400"
+      >
+        Eliminar
+      </button>
+    );
   }
 
   return (
