@@ -29,15 +29,20 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isAuthRoute = request.nextUrl.pathname.startsWith("/login");
+  // /update-password requiere sesión (llega ahí vía el link de recovery),
+  // por eso no forma parte de las rutas públicas.
+  const PUBLIC_ONLY_ROUTES = ["/login", "/reset-password"];
+  const isPublicOnlyRoute = PUBLIC_ONLY_ROUTES.includes(
+    request.nextUrl.pathname,
+  );
 
-  if (!user && !isAuthRoute) {
+  if (!user && !isPublicOnlyRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  if (user && isAuthRoute) {
+  if (user && isPublicOnlyRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
