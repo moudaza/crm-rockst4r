@@ -9,12 +9,12 @@ export function Sidebar() {
 
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
-      <div className="px-5 py-5">
+      <Link href="/dashboard" className="px-5 py-5">
         <span className="text-base font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
           ROCKST4R
         </span>
         <span className="ml-1 text-xs font-medium text-zinc-400">CRM</span>
-      </div>
+      </Link>
 
       <nav className="flex flex-1 flex-col gap-0.5 px-3">
         {NAV_ITEMS.map((item) => {
