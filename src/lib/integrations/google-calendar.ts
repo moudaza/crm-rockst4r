@@ -142,8 +142,8 @@ export async function getValidAccessToken(): Promise<string | null> {
 export type GoogleCalendarEvent = {
   id: string;
   summary: string;
-  start: string | undefined;
-  end: string | undefined;
+  start: string;
+  end: string;
 };
 
 type RawGoogleEvent = {
@@ -180,12 +180,17 @@ async function fetchCalendarEvents(params: {
   if (!response.ok) return { events: [], error: "api_error" };
 
   const data = (await response.json()) as { items?: RawGoogleEvent[] };
-  const events: GoogleCalendarEvent[] = (data.items ?? []).map((item) => ({
-    id: item.id,
-    summary: item.summary ?? "(sin título)",
-    start: item.start?.dateTime ?? item.start?.date,
-    end: item.end?.dateTime ?? item.end?.date,
-  }));
+  const events: GoogleCalendarEvent[] = (data.items ?? [])
+    // Eventos "de todo el día" (cumpleaños, recordatorios, feriados) solo
+    // traen `date`, no `dateTime` — no son sesiones con horario real, se
+    // excluyen acá para que no aparezcan como si ocuparan toda la grilla.
+    .filter((item) => item.start?.dateTime && item.end?.dateTime)
+    .map((item) => ({
+      id: item.id,
+      summary: item.summary ?? "(sin título)",
+      start: item.start!.dateTime!,
+      end: item.end!.dateTime!,
+    }));
 
   return { events, error: null };
 }
