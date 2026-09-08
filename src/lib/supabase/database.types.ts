@@ -53,6 +53,53 @@ export type Database = {
         }
         Relationships: []
       }
+      google_calendar_connection: {
+        Row: {
+          access_token: string
+          calendar_email: string | null
+          calendar_id: string
+          connected_at: string
+          connected_by: string | null
+          id: string
+          refresh_token: string
+          scope: string | null
+          token_expires_at: string
+          updated_at: string
+        }
+        Insert: {
+          access_token: string
+          calendar_email?: string | null
+          calendar_id?: string
+          connected_at?: string
+          connected_by?: string | null
+          id?: string
+          refresh_token: string
+          scope?: string | null
+          token_expires_at: string
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          calendar_email?: string | null
+          calendar_id?: string
+          connected_at?: string
+          connected_by?: string | null
+          id?: string
+          refresh_token?: string
+          scope?: string | null
+          token_expires_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_calendar_connection_connected_by_fkey"
+            columns: ["connected_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           converted_to_client_id: string | null

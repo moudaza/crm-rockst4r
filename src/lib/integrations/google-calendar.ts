@@ -1,0 +1,188 @@
+import "server-only";
+import { createClient } from "@/lib/supabase/server";
+
+// Integración OAuth con Google Calendar. Conexión única compartida por todo
+// el equipo (una sola fila en google_calendar_connection), no una cuenta de
+// Google por usuario del CRM.
+//
+// `import "server-only"` evita que GOOGLE_CLIENT_SECRET o los tokens
+// terminen en el bundle del navegador — este módulo solo se usa desde
+// Server Components, Server Actions o Route Handlers.
+
+const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
+const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar";
+const CONNECTION_ID = "00000000-0000-0000-0000-000000000001";
+const REFRESH_MARGIN_MS = 60_000;
+
+function requiredEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) throw new Error(`Falta la variable de entorno ${name}`);
+  return value;
+}
+
+export function getGoogleAuthUrl() {
+  const params = new URLSearchParams({
+    client_id: requiredEnv("GOOGLE_CLIENT_ID"),
+    redirect_uri: requiredEnv("GOOGLE_REDIRECT_URI"),
+    response_type: "code",
+    scope: CALENDAR_SCOPE,
+    access_type: "offline",
+    prompt: "consent",
+  });
+  return `${GOOGLE_AUTH_URL}?${params.toString()}`;
+}
+
+export async function getGoogleCalendarConnection() {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("google_calendar_connection")
+    .select("*")
+    .eq("id", CONNECTION_ID)
+    .maybeSingle();
+  return data;
+}
+
+export async function exchangeCodeForConnection(code: string, connectedBy: string) {
+  const tokenResponse = await fetch(GOOGLE_TOKEN_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      code,
+      client_id: requiredEnv("GOOGLE_CLIENT_ID"),
+      client_secret: requiredEnv("GOOGLE_CLIENT_SECRET"),
+      redirect_uri: requiredEnv("GOOGLE_REDIRECT_URI"),
+      grant_type: "authorization_code",
+    }),
+  });
+
+  if (!tokenResponse.ok) {
+    throw new Error(`Google rechazó el código de autorización: ${await tokenResponse.text()}`);
+  }
+
+  const tokens = (await tokenResponse.json()) as {
+    access_token: string;
+    refresh_token?: string;
+    expires_in: number;
+    scope: string;
+  };
+
+  if (!tokens.refresh_token) {
+    throw new Error(
+      "Google no devolvió un refresh_token (pasa si ya habías autorizado esta app antes). " +
+        "Quitá el acceso en myaccount.google.com/permissions y volvé a intentar.",
+    );
+  }
+
+  const userInfoResponse = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+    headers: { Authorization: `Bearer ${tokens.access_token}` },
+  });
+  const userInfo = userInfoResponse.ok
+    ? ((await userInfoResponse.json()) as { email?: string })
+    : null;
+
+  const expiresAt = new Date();
+  expiresAt.setSeconds(expiresAt.getSeconds() + tokens.expires_in);
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("google_calendar_connection").upsert({
+    id: CONNECTION_ID,
+    access_token: tokens.access_token,
+    refresh_token: tokens.refresh_token,
+    token_expires_at: expiresAt.toISOString(),
+    scope: tokens.scope,
+    calendar_email: userInfo?.email ?? null,
+    connected_by: connectedBy,
+  });
+
+  if (error) throw new Error(error.message);
+}
+
+export async function disconnectGoogleCalendar() {
+  const supabase = await createClient();
+  await supabase.from("google_calendar_connection").delete().eq("id", CONNECTION_ID);
+}
+
+async function getValidAccessToken(): Promise<string | null> {
+  const connection = await getGoogleCalendarConnection();
+  if (!connection) return null;
+
+  const expiresAt = new Date(connection.token_expires_at);
+  const now = new Date();
+  if (expiresAt.getTime() - now.getTime() > REFRESH_MARGIN_MS) {
+    return connection.access_token;
+  }
+
+  const response = await fetch(GOOGLE_TOKEN_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      refresh_token: connection.refresh_token,
+      client_id: requiredEnv("GOOGLE_CLIENT_ID"),
+      client_secret: requiredEnv("GOOGLE_CLIENT_SECRET"),
+      grant_type: "refresh_token",
+    }),
+  });
+
+  if (!response.ok) return null;
+
+  const tokens = (await response.json()) as { access_token: string; expires_in: number };
+  const newExpiresAt = new Date();
+  newExpiresAt.setSeconds(newExpiresAt.getSeconds() + tokens.expires_in);
+
+  const supabase = await createClient();
+  await supabase
+    .from("google_calendar_connection")
+    .update({ access_token: tokens.access_token, token_expires_at: newExpiresAt.toISOString() })
+    .eq("id", CONNECTION_ID);
+
+  return tokens.access_token;
+}
+
+type GoogleCalendarEvent = {
+  id: string;
+  summary: string;
+  start: string | undefined;
+  end: string | undefined;
+};
+
+type RawGoogleEvent = {
+  id: string;
+  summary?: string;
+  start?: { dateTime?: string; date?: string };
+  end?: { dateTime?: string; date?: string };
+};
+
+export async function listUpcomingCalendarEvents(
+  maxResults = 5,
+): Promise<{ events: GoogleCalendarEvent[]; error: "not_connected" | "api_error" | null }> {
+  const accessToken = await getValidAccessToken();
+  if (!accessToken) return { events: [], error: "not_connected" };
+
+  const connection = await getGoogleCalendarConnection();
+  const calendarId = connection?.calendar_id ?? "primary";
+
+  const params = new URLSearchParams({
+    timeMin: new Date().toISOString(),
+    maxResults: String(maxResults),
+    singleEvents: "true",
+    orderBy: "startTime",
+  });
+
+  const response = await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params.toString()}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+
+  if (!response.ok) return { events: [], error: "api_error" };
+
+  const data = (await response.json()) as { items?: RawGoogleEvent[] };
+  const events: GoogleCalendarEvent[] = (data.items ?? []).map((item) => ({
+    id: item.id,
+    summary: item.summary ?? "(sin título)",
+    start: item.start?.dateTime ?? item.start?.date,
+    end: item.end?.dateTime ?? item.end?.date,
+  }));
+
+  return { events, error: null };
+}
