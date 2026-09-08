@@ -139,7 +139,7 @@ export async function getValidAccessToken(): Promise<string | null> {
   return tokens.access_token;
 }
 
-type GoogleCalendarEvent = {
+export type GoogleCalendarEvent = {
   id: string;
   summary: string;
   start: string | undefined;
@@ -153,24 +153,27 @@ type RawGoogleEvent = {
   end?: { dateTime?: string; date?: string };
 };
 
-export async function listUpcomingCalendarEvents(
-  maxResults = 5,
-): Promise<{ events: GoogleCalendarEvent[]; error: "not_connected" | "api_error" | null }> {
+async function fetchCalendarEvents(params: {
+  timeMin: string;
+  timeMax?: string;
+  maxResults?: number;
+}): Promise<{ events: GoogleCalendarEvent[]; error: "not_connected" | "api_error" | null }> {
   const accessToken = await getValidAccessToken();
   if (!accessToken) return { events: [], error: "not_connected" };
 
   const connection = await getGoogleCalendarConnection();
   const calendarId = connection?.calendar_id ?? "primary";
 
-  const params = new URLSearchParams({
-    timeMin: new Date().toISOString(),
-    maxResults: String(maxResults),
+  const query = new URLSearchParams({
+    timeMin: params.timeMin,
+    maxResults: String(params.maxResults ?? 50),
     singleEvents: "true",
     orderBy: "startTime",
   });
+  if (params.timeMax) query.set("timeMax", params.timeMax);
 
   const response = await fetch(
-    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params.toString()}`,
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${query.toString()}`,
     { headers: { Authorization: `Bearer ${accessToken}` } },
   );
 
@@ -185,6 +188,18 @@ export async function listUpcomingCalendarEvents(
   }));
 
   return { events, error: null };
+}
+
+export async function listUpcomingCalendarEvents(maxResults = 5) {
+  return fetchCalendarEvents({ timeMin: new Date().toISOString(), maxResults });
+}
+
+/** Eventos de Google Calendar en un rango — para mezclar con las reservas
+ * propias del CRM en la vista de Calendario (eventos creados directo en
+ * Google, como los que vienen de la página de reservas del estudio, no
+ * tienen una fila en `reservations`). */
+export async function listCalendarEventsInRange(timeMin: string, timeMax: string) {
+  return fetchCalendarEvents({ timeMin, timeMax, maxResults: 100 });
 }
 
 export type BusyInterval = { start: string; end: string };
