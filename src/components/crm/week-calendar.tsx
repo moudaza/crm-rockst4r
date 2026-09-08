@@ -5,6 +5,7 @@ import { RESERVATION_STATUS_LABELS, RESERVATION_STATUS_STYLES } from "@/lib/rese
 import { startOfWeekBogota, toBogotaDateString, toBogotaHourMinute } from "@/lib/timezone";
 import type { CalendarRow } from "@/lib/calendar-row";
 import { ReservationActions } from "@/components/crm/reservation-actions";
+import type { GeneratePaymentLinkResult } from "@/app/(crm)/calendario/actions";
 
 const HOUR_START = 6;
 const HOUR_END = 21;
@@ -32,11 +33,13 @@ export function WeekCalendar({
   todayDateStr,
   confirmAction,
   cancelAction,
+  generatePaymentLinkAction,
 }: {
   rows: CalendarRow[];
   todayDateStr: string;
   confirmAction: (id: string) => Promise<void>;
   cancelAction: (id: string) => Promise<void>;
+  generatePaymentLinkAction: (id: string) => Promise<GeneratePaymentLinkResult>;
 }) {
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
@@ -222,6 +225,7 @@ export function WeekCalendar({
                 status={selectedRow.status}
                 confirmAction={confirmAction}
                 cancelAction={cancelAction}
+                generatePaymentLinkAction={generatePaymentLinkAction}
               />
             </div>
           ) : (

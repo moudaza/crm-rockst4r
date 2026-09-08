@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAvailableSlots, type AvailableSlot } from "@/lib/availability";
 import { createCalendarEvent, deleteCalendarEvent } from "@/lib/integrations/google-calendar";
+import { createBoldPaymentLink } from "@/lib/integrations/bold";
 
 export type ReservationFormState = { error: string | null };
 
@@ -111,6 +112,70 @@ export async function confirmReservation(id: string) {
     })
     .eq("id", id);
   revalidatePath("/calendario");
+}
+
+export type GeneratePaymentLinkResult = { checkoutUrl: string } | { error: string };
+
+/** Genera un link de pago de BOLD para una reserva PRE_RESERVED — el monto
+ * es el depósito o el pago completo según config del servicio. El staff
+ * comparte ese link manualmente (WhatsApp) hasta que exista la
+ * automatización con Manychat (Etapa 5). La reserva NO se confirma acá —
+ * solo se confirma cuando llega el webhook de BOLD con el pago aprobado. */
+export async function generatePaymentLink(reservationId: string): Promise<GeneratePaymentLinkResult> {
+  const supabase = await createClient();
+
+  const { data: reservation, error: fetchError } = await supabase
+    .from("reservations")
+    .select(
+      "id, status, services(name, price, payment_type, deposit_percentage), leads(name, email), clients(name, email)",
+    )
+    .eq("id", reservationId)
+    .single();
+
+  if (fetchError || !reservation) return { error: "No se encontró la reserva." };
+  if (reservation.status !== "PRE_RESERVED") {
+    return { error: "Solo se puede generar un link de pago para una pre-reserva." };
+  }
+  if (!reservation.services) return { error: "La reserva no tiene un servicio válido." };
+
+  const contactName = reservation.clients?.name ?? reservation.leads?.name ?? "Cliente";
+  const contactEmail = reservation.clients?.email ?? reservation.leads?.email ?? undefined;
+
+  const amount =
+    reservation.services.payment_type === "DEPOSIT"
+      ? Math.round((reservation.services.price * (reservation.services.deposit_percentage ?? 0)) / 100)
+      : Math.round(reservation.services.price);
+
+  if (amount <= 0) return { error: "El monto a cobrar debe ser mayor a cero." };
+
+  const reference = `res-${reservationId}-${Date.now()}`;
+
+  let link;
+  try {
+    link = await createBoldPaymentLink({
+      amount,
+      currency: "COP",
+      reference,
+      description: `${reservation.services.name} — ${contactName}`,
+      payerEmail: contactEmail,
+    });
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "No se pudo crear el link de pago." };
+  }
+
+  const { error: insertError } = await supabase.from("payments").insert({
+    reservation_id: reservationId,
+    reference,
+    bold_payment_link_id: link.paymentLinkId,
+    amount,
+    currency: "COP",
+    checkout_url: link.checkoutUrl,
+  });
+
+  if (insertError) return { error: insertError.message };
+
+  revalidatePath("/calendario");
+  return { checkoutUrl: link.checkoutUrl };
 }
 
 export async function cancelReservation(id: string) {

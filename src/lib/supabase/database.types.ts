@@ -166,6 +166,62 @@ export type Database = {
           },
         ]
       }
+      payments: {
+        Row: {
+          amount: number
+          bold_payment_link_id: string
+          bold_transaction_id: string | null
+          checkout_url: string
+          created_at: string
+          currency: string
+          id: string
+          paid_at: string | null
+          raw_webhook_payload: Json | null
+          reference: string
+          reservation_id: string
+          status: Database["public"]["Enums"]["payment_status"]
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          bold_payment_link_id: string
+          bold_transaction_id?: string | null
+          checkout_url: string
+          created_at?: string
+          currency?: string
+          id?: string
+          paid_at?: string | null
+          raw_webhook_payload?: Json | null
+          reference: string
+          reservation_id: string
+          status?: Database["public"]["Enums"]["payment_status"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          bold_payment_link_id?: string
+          bold_transaction_id?: string | null
+          checkout_url?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          paid_at?: string | null
+          raw_webhook_payload?: Json | null
+          reference?: string
+          reservation_id?: string
+          status?: Database["public"]["Enums"]["payment_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -412,6 +468,27 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      process_bold_webhook_event: {
+        Args: {
+          p_bold_transaction_id: string
+          p_raw_payload: Json
+          p_reference: string
+          p_status: Database["public"]["Enums"]["payment_status"]
+        }
+        Returns: {
+          contact_name: string
+          ends_at: string
+          needs_google_event: boolean
+          notes: string
+          reservation_id: string
+          service_name: string
+          starts_at: string
+        }[]
+      }
+      set_reservation_google_event: {
+        Args: { p_google_event_id: string; p_reservation_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       lead_status:
@@ -422,6 +499,12 @@ export type Database = {
         | "RESERVADO"
         | "CLIENTE"
         | "PERDIDO"
+      payment_status:
+        | "PENDING"
+        | "APPROVED"
+        | "REJECTED"
+        | "VOID_APPROVED"
+        | "VOID_REJECTED"
       reservation_status: "PRE_RESERVED" | "CONFIRMED" | "EXPIRED" | "CANCELLED"
       service_payment_type: "FULL" | "DEPOSIT"
     }
@@ -559,6 +642,13 @@ export const Constants = {
         "RESERVADO",
         "CLIENTE",
         "PERDIDO",
+      ],
+      payment_status: [
+        "PENDING",
+        "APPROVED",
+        "REJECTED",
+        "VOID_APPROVED",
+        "VOID_REJECTED",
       ],
       reservation_status: ["PRE_RESERVED", "CONFIRMED", "EXPIRED", "CANCELLED"],
       service_payment_type: ["FULL", "DEPOSIT"],
