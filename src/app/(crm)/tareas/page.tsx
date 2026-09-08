@@ -1,12 +1,5 @@
 import { getMagicflowTasks } from "@/lib/integrations/magicflow";
-import { formatCurrency } from "@/lib/format";
-
-const PRIORITY_LABELS: Record<string, string> = {
-  none: "—",
-  low: "Baja",
-  medium: "Media",
-  high: "Alta",
-};
+import { MagicflowTasksList } from "@/components/crm/magicflow-tasks-list";
 
 export default async function TareasPage() {
   const { tasks, error } = await getMagicflowTasks();
@@ -44,66 +37,7 @@ export default async function TareasPage() {
           No se pudo leer MagicFlow: {error}
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-zinc-200 text-left text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
-                <th className="px-4 py-3 font-medium">Título</th>
-                <th className="px-4 py-3 font-medium">Vencimiento</th>
-                <th className="px-4 py-3 font-medium">Prioridad</th>
-                <th className="px-4 py-3 font-medium">Monto</th>
-                <th className="px-4 py-3 font-medium">Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tasks.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-zinc-500 dark:text-zinc-400">
-                    No hay tareas.
-                  </td>
-                </tr>
-              )}
-
-              {tasks.map((task) => (
-                <tr
-                  key={task.id}
-                  className="border-b border-zinc-100 last:border-0 dark:border-zinc-900"
-                >
-                  <td
-                    className={`px-4 py-3 font-medium ${
-                      task.completed
-                        ? "text-zinc-400 line-through dark:text-zinc-600"
-                        : "text-zinc-900 dark:text-zinc-50"
-                    }`}
-                  >
-                    {task.title}
-                  </td>
-                  <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
-                    {task.due_date ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
-                    {PRIORITY_LABELS[task.priority] ?? task.priority}
-                  </td>
-                  <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
-                    {task.amount_cop ? formatCurrency(task.amount_cop) : "—"}
-                    {task.amount_cop ? (task.paid ? " (pagado)" : " (pendiente)") : ""}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                        task.completed
-                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
-                          : "bg-zinc-100 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400"
-                      }`}
-                    >
-                      {task.completed ? "Completada" : "Pendiente"}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <MagicflowTasksList tasks={tasks} />
       )}
     </div>
   );
