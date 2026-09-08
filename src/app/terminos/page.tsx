@@ -127,9 +127,9 @@ export default function TerminosPage() {
         <Section title="12. Contacto">
           <p>
             Para consultas sobre estos términos, escribinos a{" "}
-            <span className="italic text-zinc-500 dark:text-zinc-400">
-              [correo de contacto pendiente de completar]
-            </span>
+            <a href="mailto:info@rockst4rstudio.com" className="underline">
+              info@rockst4rstudio.com
+            </a>
             .
           </p>
         </Section>
