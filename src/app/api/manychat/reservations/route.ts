@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { isValidManychatRequest } from "@/lib/manychat-auth";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { createBoldPaymentLink } from "@/lib/integrations/bold";
-import { MANUAL_PAYMENT_ACCOUNTS } from "@/lib/manual-payment-info";
+import { getManualPaymentAccounts } from "@/lib/manual-payment-info";
 
 // Crea la pre-reserva + el link de pago de BOLD en un solo paso, para que
 // Manychat se lo mande al cliente de una — la reserva NO queda confirmada
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
         reservation_id: reservation.id,
         expires_at: reservation.expires_at,
         error: err instanceof Error ? err.message : "No se pudo crear el link de pago",
-        manual_payment_accounts: MANUAL_PAYMENT_ACCOUNTS,
+        manual_payment_accounts: getManualPaymentAccounts(),
       },
       { status: 502 },
     );
@@ -136,6 +136,6 @@ export async function POST(request: NextRequest) {
     checkout_url: link.checkoutUrl,
     amount,
     currency: "COP",
-    manual_payment_accounts: MANUAL_PAYMENT_ACCOUNTS,
+    manual_payment_accounts: getManualPaymentAccounts(),
   });
 }

@@ -6,6 +6,7 @@ import { startOfWeekBogota, toBogotaDateString, toBogotaHourMinute } from "@/lib
 import type { CalendarRow } from "@/lib/calendar-row";
 import { ReservationActions } from "@/components/crm/reservation-actions";
 import type { GeneratePaymentLinkResult } from "@/app/(crm)/calendario/actions";
+import type { ManualPaymentAccount } from "@/lib/manual-payment-info";
 
 const HOUR_START = 6;
 const HOUR_END = 21;
@@ -35,6 +36,7 @@ export function WeekCalendar({
   cancelAction,
   generatePaymentLinkAction,
   deleteAction,
+  manualPaymentAccounts,
 }: {
   rows: CalendarRow[];
   todayDateStr: string;
@@ -42,6 +44,7 @@ export function WeekCalendar({
   cancelAction: (id: string) => Promise<void>;
   generatePaymentLinkAction: (id: string) => Promise<GeneratePaymentLinkResult>;
   deleteAction: (id: string) => Promise<void>;
+  manualPaymentAccounts: ManualPaymentAccount[];
 }) {
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
@@ -229,6 +232,7 @@ export function WeekCalendar({
                 cancelAction={cancelAction}
                 generatePaymentLinkAction={generatePaymentLinkAction}
                 deleteAction={deleteAction}
+                manualPaymentAccounts={manualPaymentAccounts}
               />
             </div>
           ) : (

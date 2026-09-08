@@ -10,6 +10,7 @@ import {
 } from "@/lib/integrations/google-calendar";
 import { todayInBogota } from "@/lib/timezone";
 import type { CalendarRow } from "@/lib/calendar-row";
+import { getManualPaymentAccounts } from "@/lib/manual-payment-info";
 import { confirmReservation, cancelReservation, generatePaymentLink, deleteReservation } from "./actions";
 
 export default async function CalendarioPage() {
@@ -103,6 +104,7 @@ export default async function CalendarioPage() {
         cancelAction={cancelReservation}
         generatePaymentLinkAction={generatePaymentLink}
         deleteAction={deleteReservation}
+        manualPaymentAccounts={getManualPaymentAccounts()}
       />
     </div>
   );

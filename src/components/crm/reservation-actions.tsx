@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import type { GeneratePaymentLinkResult } from "@/app/(crm)/calendario/actions";
-import { MANUAL_PAYMENT_ACCOUNTS } from "@/lib/manual-payment-info";
+import type { ManualPaymentAccount } from "@/lib/manual-payment-info";
 
 export function ReservationActions({
   id,
@@ -11,6 +11,7 @@ export function ReservationActions({
   cancelAction,
   generatePaymentLinkAction,
   deleteAction,
+  manualPaymentAccounts,
 }: {
   id: string;
   status: "PRE_RESERVED" | "CONFIRMED" | "EXPIRED" | "CANCELLED";
@@ -18,6 +19,7 @@ export function ReservationActions({
   cancelAction: (id: string) => Promise<void>;
   generatePaymentLinkAction: (id: string) => Promise<GeneratePaymentLinkResult>;
   deleteAction: (id: string) => Promise<void>;
+  manualPaymentAccounts: ManualPaymentAccount[];
 }) {
   const [isPending, startTransition] = useTransition();
   const [isPaymentPending, startPaymentTransition] = useTransition();
@@ -99,7 +101,7 @@ export function ReservationActions({
       )}
       {showManualPayment && (
         <div className="flex w-full max-w-xs flex-col gap-1.5 rounded-md border border-zinc-200 bg-zinc-50 p-3 text-right text-sm dark:border-zinc-800 dark:bg-zinc-900">
-          {MANUAL_PAYMENT_ACCOUNTS.map((account) => (
+          {manualPaymentAccounts.map((account) => (
             <p key={account.method}>
               <span className="font-medium text-zinc-700 dark:text-zinc-300">{account.method}:</span>{" "}
               <span className="text-zinc-600 dark:text-zinc-400">{account.detail}</span>
