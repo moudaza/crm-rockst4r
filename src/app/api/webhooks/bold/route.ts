@@ -27,6 +27,9 @@ export async function POST(request: NextRequest) {
   }
 
   const payload = JSON.parse(rawBody) as BoldWebhookPayload;
+  // DEBUG TEMPORAL: confirmar el nombre real del campo que trae nuestra
+  // referencia — quitar una vez confirmado.
+  console.log("[bold-webhook] raw body:", rawBody);
   const status = EVENT_TO_STATUS[payload.type];
 
   if (!status) {
