@@ -3,6 +3,9 @@ import { isValidManychatRequest } from "@/lib/manychat-auth";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { createBoldPaymentLink } from "@/lib/integrations/bold";
 import { getManualPaymentAccounts } from "@/lib/manual-payment-info";
+import { getAvailableSlots } from "@/lib/availability";
+import { toBogotaDateString } from "@/lib/timezone";
+import { SINGLE_EVENT_DATE } from "@/lib/manychat-event-scope";
 
 // Crea la pre-reserva + el link de pago de BOLD en un solo paso, para que
 // Manychat se lo mande al cliente de una — la reserva NO queda confirmada
@@ -36,6 +39,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "starts_at inválido" }, { status: 400 });
   }
 
+  // El Maratón es un evento único por ahora (no todos los sábados) — ver
+  // src/lib/manychat-event-scope.ts.
+  const requestedDate = toBogotaDateString(startsAt.toISOString());
+  if (requestedDate !== SINGLE_EVENT_DATE) {
+    return NextResponse.json({ error: "Esa fecha no tiene el Maratón disponible" }, { status: 409 });
+  }
+
   const supabase = createServiceRoleClient();
 
   const { data: services } = await supabase
@@ -59,6 +69,16 @@ export async function POST(request: NextRequest) {
     );
   }
   const service = withWindows[0];
+
+  // No confiar en que starts_at sea un horario real solo porque el cliente
+  // lo mandó — verificar contra la disponibilidad real calculada (ventanas
+  // configuradas + Google Calendar + reservas propias), igual que se le
+  // mostró al cliente en /availability.
+  const { slots: realSlots } = await getAvailableSlots(service.id, requestedDate, supabase);
+  const isRealSlot = realSlots.some((slot) => slot.startsAt === startsAt.toISOString());
+  if (!isRealSlot) {
+    return NextResponse.json({ error: "Ese horario ya no está disponible" }, { status: 409 });
+  }
 
   let { data: lead } = await supabase
     .from("leads")

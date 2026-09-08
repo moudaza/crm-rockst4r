@@ -3,6 +3,7 @@ import { isValidManychatRequest } from "@/lib/manychat-auth";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { getAvailableSlots } from "@/lib/availability";
 import { toBogotaHourMinute } from "@/lib/timezone";
+import { SINGLE_EVENT_DATE } from "@/lib/manychat-event-scope";
 
 // Consulta de disponibilidad para Manychat: recibe una FECHA (no una hora —
 // Manychat le pregunta al cliente qué día quiere, nunca a qué hora, y acá se
@@ -18,6 +19,12 @@ export async function GET(request: NextRequest) {
   const date = request.nextUrl.searchParams.get("date");
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     return NextResponse.json({ error: "Parámetro 'date' inválido (formato YYYY-MM-DD)" }, { status: 400 });
+  }
+
+  // El Maratón es un evento único por ahora (no todos los sábados) — ver
+  // src/lib/manychat-event-scope.ts.
+  if (date !== SINGLE_EVENT_DATE) {
+    return NextResponse.json({ service: null, date, slots: [], error: "not_the_event_date" });
   }
 
   const supabase = createServiceRoleClient();
